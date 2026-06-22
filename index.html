@@ -3,126 +3,330 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Hitung Gaji Karyawan</title>
+    <title>E-Slip Gaji | VI PRINTING</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
     <style>
-        @media print {
-            .no-print { display: none !important; }
-            body { background: white; padding: 0; }
+        body { font-family: 'Inter', sans-serif; }
+        .hidden { display: none !important; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
         }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="bg-gray-50 p-4 md:p-8 font-sans text-gray-900">
+<body class="bg-slate-50 text-slate-800 min-h-screen">
 
-    <div class="max-w-4xl mx-auto bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
-        <h1 class="text-3xl font-black mb-6 text-gray-800 text-center">Dashboard Gaji</h1>
-        
-        <div class="mb-8 no-print">
-            <label class="block text-sm font-bold text-gray-700 mb-2">Pilih Karyawan:</label>
-            <select id="employeeSelect" onchange="updateSalaryForm()" class="w-full p-4 text-lg border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition">
-                <option value="" selected>-- Sedang mengambil data dari CSV... --</option>
-            </select>
+    <main id="login-view" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 border border-slate-100">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-200">
+                    <i data-lucide="printer" class="text-white w-8 h-8"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">VI PRINTING</h1>
+                <p class="text-sm text-slate-500 mt-1">Portal E-Slip Gaji Karyawan</p>
+            </div>
+
+            <div id="login-error" class="hidden mb-4 bg-red-50 border-l-4 border-red-500 text-red-700 p-3 rounded text-sm flex items-start gap-2">
+                <i data-lucide="alert-circle" class="w-4 h-4 mt-0.5 flex-shrink-0"></i>
+                <span id="login-error-msg">Terjadi kesalahan.</span>
+            </div>
+
+            <form id="login-form" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Username / Nama</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="user" class="w-5 h-5 text-slate-400"></i>
+                        </div>
+                        <input type="text" id="username" required
+                            class="pl-10 w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors outline-none"
+                            placeholder="Masukkan Username / Nama">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="lock" class="w-5 h-5 text-slate-400"></i>
+                        </div>
+                        <input type="password" id="password" required
+                            class="pl-10 w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors outline-none"
+                            placeholder="••••••••">
+                    </div>
+                </div>
+
+                <button type="submit" id="btn-login" 
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md shadow-blue-200 mt-6">
+                    <span id="btn-text">Masuk ke Portal</span>
+                    <div id="btn-loader" class="loader hidden"></div>
+                </button>
+            </form>
+            
+            <p class="text-center text-xs text-slate-400 mt-6">Butuh bantuan? Hubungi Admin HRD.</p>
         </div>
+    </main>
 
-        <div id="salaryForm" class="hidden space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="p-4 bg-blue-50 rounded-xl">
-                    <label class="block text-xs font-bold text-blue-800 uppercase">Gaji 1 Bulan</label>
-                    <input type="text" id="dispGaji" readonly class="w-full bg-transparent text-2xl font-black text-blue-900 focus:outline-none">
+    <main id="dashboard-view" class="hidden min-h-screen bg-slate-50 pb-10">
+        <nav class="bg-blue-600 text-white sticky top-0 z-10 shadow-md shadow-blue-900/5">
+            <div class="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="printer" class="w-5 h-5"></i>
+                    <span class="font-semibold tracking-tight">VI PRINTING</span>
                 </div>
-                <div class="p-4 bg-emerald-50 rounded-xl">
-                    <label class="block text-xs font-bold text-emerald-800 uppercase">Bonus</label>
-                    <input type="text" id="dispBonus" class="w-full bg-transparent text-2xl font-black text-emerald-900 focus:outline-none" oninput="handleCurrencyInput(this)">
-                </div>
-            </div>
-
-            <div class="p-4 bg-rose-50 rounded-xl border border-rose-100">
-                <label class="block text-xs font-bold text-rose-800 uppercase mb-2">Potongan Absensi</label>
-                <div class="flex items-center space-x-4">
-                    <input type="number" id="inJmlAbsen" value="0" oninput="calculate()" class="w-20 p-2 text-xl font-bold rounded-lg border">
-                    <span class="text-gray-500">hari x</span>
-                    <input type="text" id="dispPotongan" readonly class="w-40 p-2 text-xl font-bold rounded-lg border">
-                    <span class="text-rose-600 font-bold">= - <span id="outTotalPotong">Rp 0</span></span>
-                </div>
-            </div>
-
-            <div class="p-8 bg-gray-900 rounded-2xl text-white text-center shadow-2xl">
-                <p class="text-gray-400 text-sm font-bold uppercase tracking-widest">Total Gaji Diterima</p>
-                <h2 id="outGajiBersih" class="text-5xl font-black mt-2">Rp 0</h2>
-            </div>
-
-            <div class="flex justify-center mt-6 no-print">
-                <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition">
-                    🖨️ Cetak ke PDF
+                <button onclick="logout()" class="p-2 hover:bg-blue-700 rounded-full transition-colors" title="Logout">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
                 </button>
             </div>
+        </nav>
+
+        <div class="max-w-md mx-auto px-4 mt-6 space-y-6">
+            <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
+                <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl font-bold shrink-0">
+                    <span id="profile-initial">V</span>
+                </div>
+                <div>
+                    <h2 id="profile-nama" class="text-lg font-bold text-slate-800 leading-tight">Nama Karyawan</h2>
+                    <p class="text-sm text-slate-500 mt-0.5 flex items-center gap-1.5">
+                        <i data-lucide="badge-check" class="w-4 h-4 text-green-500"></i>
+                        <span id="profile-jabatan">Jabatan</span>
+                        <span class="text-slate-300">•</span>
+                        <span id="profile-noid" class="font-mono text-xs">ID000</span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between px-1">
+                <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Riwayat Slip Gaji</h3>
+                <span id="total-slip-badge" class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-1 rounded-full">0 Data</span>
+            </div>
+
+            <div id="slips-container" class="space-y-4"></div>
         </div>
-    </div>
+    </main>
 
     <script>
-        let employees = {};
+        lucide.createIcons();
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwamKx3bdGkgIR3O1vUC2aHLbgNuIXQHtC1SNiQLYEc11Tm0MZJgUHfqXoKU-ebdS-E7A/exec";
+        
+        const viewLogin = document.getElementById('login-view');
+        const viewDashboard = document.getElementById('dashboard-view');
+        const formLogin = document.getElementById('login-form');
+        const errorBanner = document.getElementById('login-error');
+        const errorMsg = document.getElementById('login-error-msg');
+        const btnText = document.getElementById('btn-text');
+        const btnLoader = document.getElementById('btn-loader');
+        const btnLogin = document.getElementById('btn-login');
+        
+        document.addEventListener("DOMContentLoaded", checkSession);
 
-        const toIDR = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
-
-        function handleCurrencyInput(el) {
-            let val = el.value.replace(/[^0-9]/g, '');
-            el.value = val ? toIDR(val).replace('Rp ', '') : '';
-            calculate();
+        function checkSession() {
+            const savedData = sessionStorage.getItem("vi_printing_session");
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                renderDashboard(data.user, data.slips);
+                showView('dashboard');
+            } else {
+                showView('login');
+            }
         }
 
-        async function fetchData() {
-            const url = `https://docs.google.com/spreadsheets/d/e/2PACX-1vTjHLUyc7UCb79q96AOF4dBMShS2VK1b534TtAYVKdZggSNEm1luLCr9VPh_yD2N2xHNglAcY-Z7Enj/pub?gid=452057664&single=true&output=csv`;
+        formLogin.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const usernameInput = document.getElementById('username').value.trim();
+            const passwordInput = document.getElementById('password').value.trim();
+
+            if(APPS_SCRIPT_URL.includes("ISI_URL")) {
+                showError("Error: Developer belum memasukkan URL Apps Script.");
+                return;
+            }
+
+            setLoading(true);
+            hideError();
+
             try {
-                const response = await fetch(url);
-                const data = await response.text();
-                const rows = data.split('\n').slice(1);
-                
-                const select = document.getElementById('employeeSelect');
-                select.innerHTML = '<option value="" disabled selected>-- Pilih Karyawan --</option>';
-
-                rows.forEach((row, index) => {
-                    const cols = row.split(',');
-                    const nama = cols[2]?.replace(/"/g, '');
-                    const gaji = parseFloat(cols[8]) || 0;
-                    const bonus = parseFloat(cols[9]) || 0;
-                    const potong = parseFloat(cols[10]) || 0;
-
-                    if (nama) {
-                        employees[index] = { nama, gaji, bonus, potong };
-                        select.innerHTML += `<option value="${index}">${nama}</option>`;
-                    }
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({ action: "login", username: usernameInput, password: passwordInput })
                 });
-            } catch (err) {
-                console.error("Error loading CSV:", err);
+
+                if (!response.ok) throw new Error("Koneksi ke server gagal.");
+                const result = await response.json();
+
+                if (result.success) {
+                    sessionStorage.setItem("vi_printing_session", JSON.stringify({ user: result.user, slips: result.slips }));
+                    formLogin.reset();
+                    renderDashboard(result.user, result.slips);
+                    showView('dashboard');
+                } else {
+                    showError(result.message || "Login Gagal.");
+                }
+            } catch (error) {
+                showError("Gagal terhubung ke server.");
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        function logout() {
+            sessionStorage.removeItem("vi_printing_session");
+            document.getElementById('slips-container').innerHTML = '';
+            showView('login');
+        }
+
+        function showView(view) {
+            if (view === 'login') {
+                viewDashboard.classList.add('hidden');
+                viewLogin.classList.remove('hidden');
+            } else {
+                viewLogin.classList.add('hidden');
+                viewDashboard.classList.remove('hidden');
             }
         }
 
-        function updateSalaryForm() {
-            const id = document.getElementById('employeeSelect').value;
-            const emp = employees[id];
-            if(emp) {
-                document.getElementById('salaryForm').classList.remove('hidden');
-                document.getElementById('dispGaji').value = toIDR(emp.gaji);
-                document.getElementById('dispBonus').value = emp.bonus.toLocaleString('id-ID');
-                document.getElementById('dispPotongan').value = toIDR(emp.potong);
-                calculate();
+        function setLoading(isLoading) {
+            if (isLoading) {
+                btnLogin.disabled = true;
+                btnLogin.classList.add('opacity-80', 'cursor-not-allowed');
+                btnText.innerText = "Memverifikasi...";
+                btnLoader.classList.remove('hidden');
+            } else {
+                btnLogin.disabled = false;
+                btnLogin.classList.remove('opacity-80', 'cursor-not-allowed');
+                btnText.innerText = "Masuk ke Portal";
+                btnLoader.classList.add('hidden');
             }
         }
 
-        function calculate() {
-            const gaji = parseFloat(document.getElementById('dispGaji').value.replace(/[^0-9]/g, '')) || 0;
-            const bonus = parseFloat(document.getElementById('dispBonus').value.replace(/[^0-9]/g, '')) || 0;
-            const jmlAbsen = parseFloat(document.getElementById('inJmlAbsen').value) || 0;
-            const potongPerHari = parseFloat(document.getElementById('dispPotongan').value.replace(/[^0-9]/g, '')) || 0;
-
-            const totalPotong = jmlAbsen * potongPerHari;
-            const totalGaji = (gaji + bonus) - totalPotong;
-
-            document.getElementById('outTotalPotong').innerText = toIDR(totalPotong);
-            document.getElementById('outGajiBersih').innerText = toIDR(totalGaji);
+        function showError(message) {
+            errorMsg.innerText = message;
+            errorBanner.classList.remove('hidden');
         }
 
-        window.onload = fetchData;
+        function hideError() {
+            errorBanner.classList.add('hidden');
+        }
+
+        function formatRupiah(number) {
+            if (isNaN(number) || number === null || number === "") return "Rp 0";
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(number);
+        }
+
+        function formatPeriod(dateString) {
+            const date = new Date(dateString);
+            const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            return `${months[date.getMonth()].toUpperCase()} ${date.getFullYear()}`;
+        }
+
+        function renderDashboard(user, slips) {
+            document.getElementById('profile-nama').innerText = user.nama || user.username;
+            document.getElementById('profile-jabatan').innerText = user.jabatan || "-";
+            document.getElementById('profile-noid').innerText = "ID: " + user.noid;
+            document.getElementById('profile-initial').innerText = (user.nama || user.username).charAt(0).toUpperCase();
+            document.getElementById('total-slip-badge').innerText = slips.length + " Slip";
+
+            slips.sort((a, b) => new Date(b.periode) - new Date(a.periode));
+
+            const container = document.getElementById('slips-container');
+            container.innerHTML = '';
+
+            if (slips.length === 0) {
+                container.innerHTML = `<div class="text-center bg-white rounded-xl p-8 border border-slate-100 shadow-sm"><i data-lucide="file-x" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i><p class="text-slate-500 text-sm">Belum ada riwayat slip gaji.</p></div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            slips.forEach((slip, index) => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden";
+                
+                // Kondisi tampilan bonus & potongan
+                const bonusRow = slip.bonus > 0 ? `
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-600">Bonus Kehadiran</span>
+                        <span class="font-medium text-emerald-600">+ ${formatRupiah(slip.bonus)}</span>
+                    </div>` : '';
+                
+                const potonganRow = slip.potongan > 0 ? `
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-600">Potongan</span>
+                        <span class="font-medium text-red-500">- ${formatRupiah(slip.potongan)}</span>
+                    </div>` : '';
+
+                card.innerHTML = `
+                    <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-colors" onclick="toggleDetails('slip-${index}')">
+                        <div class="flex flex-col">
+                            <span class="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">Periode</span>
+                            <span class="font-bold text-slate-800">${formatPeriod(slip.periode)}</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-right">
+                            <div class="flex flex-col">
+                                <span class="text-xs text-slate-500 mb-1">Total Diterima</span>
+                                <span class="font-bold text-emerald-600">${formatRupiah(slip.totalGaji)}</span>
+                            </div>
+                            <div class="bg-blue-100 text-blue-600 p-1.5 rounded-md w-7 h-7 flex items-center justify-center">
+                                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200" id="icon-slip-${index}"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="slip-${index}" class="hidden">
+                        <div class="p-4 space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                    <div class="text-xs text-slate-500 mb-1">Total Kehadiran</div>
+                                    <div class="font-semibold text-slate-800">${slip.totalKehadiran || '0'} Hari</div>
+                                </div>
+                                <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                    <div class="text-xs text-slate-500 mb-1">Absen / Izin</div>
+                                    <div class="font-semibold text-slate-800">${slip.absenIzin || '0'} Hari</div>
+                                </div>
+                            </div>
+                            <hr class="border-slate-100">
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-slate-600">Gaji Pokok</span>
+                                    <span class="font-medium text-slate-800">${formatRupiah(slip.gajiPokok)}</span>
+                                </div>
+                                ${bonusRow}
+                                ${potonganRow}
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-dashed border-slate-300 flex justify-between items-center">
+                                <span class="font-bold text-slate-800">Total Gaji Bersih</span>
+                                <span class="text-lg font-bold text-emerald-600">${formatRupiah(slip.totalGaji)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        function toggleDetails(id) {
+            const el = document.getElementById(id);
+            const icon = document.getElementById('icon-' + id);
+            if (el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+            } else {
+                el.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+            }
+        }
     </script>
 </body>
 </html>
