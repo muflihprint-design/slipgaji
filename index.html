@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Hitung Gaji Karyawan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; padding: 0; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 p-4 md:p-8 font-sans text-gray-900">
+
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
+        <h1 class="text-3xl font-black mb-6 text-gray-800 text-center">Dashboard Gaji</h1>
+        
+        <div class="mb-8 no-print">
+            <label class="block text-sm font-bold text-gray-700 mb-2">Pilih Karyawan:</label>
+            <select id="employeeSelect" onchange="updateSalaryForm()" class="w-full p-4 text-lg border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition">
+                <option value="" selected>-- Sedang mengambil data dari CSV... --</option>
+            </select>
+        </div>
+
+        <div id="salaryForm" class="hidden space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-4 bg-blue-50 rounded-xl">
+                    <label class="block text-xs font-bold text-blue-800 uppercase">Gaji 1 Bulan</label>
+                    <input type="text" id="dispGaji" readonly class="w-full bg-transparent text-2xl font-black text-blue-900 focus:outline-none">
+                </div>
+                <div class="p-4 bg-emerald-50 rounded-xl">
+                    <label class="block text-xs font-bold text-emerald-800 uppercase">Bonus</label>
+                    <input type="text" id="dispBonus" class="w-full bg-transparent text-2xl font-black text-emerald-900 focus:outline-none" oninput="handleCurrencyInput(this)">
+                </div>
+            </div>
+
+            <div class="p-4 bg-rose-50 rounded-xl border border-rose-100">
+                <label class="block text-xs font-bold text-rose-800 uppercase mb-2">Potongan Absensi</label>
+                <div class="flex items-center space-x-4">
+                    <input type="number" id="inJmlAbsen" value="0" oninput="calculate()" class="w-20 p-2 text-xl font-bold rounded-lg border">
+                    <span class="text-gray-500">hari x</span>
+                    <input type="text" id="dispPotongan" readonly class="w-40 p-2 text-xl font-bold rounded-lg border">
+                    <span class="text-rose-600 font-bold">= - <span id="outTotalPotong">Rp 0</span></span>
+                </div>
+            </div>
+
+            <div class="p-8 bg-gray-900 rounded-2xl text-white text-center shadow-2xl">
+                <p class="text-gray-400 text-sm font-bold uppercase tracking-widest">Total Gaji Diterima</p>
+                <h2 id="outGajiBersih" class="text-5xl font-black mt-2">Rp 0</h2>
+            </div>
+
+            <div class="flex justify-center mt-6 no-print">
+                <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition">
+                    🖨️ Cetak ke PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let employees = {};
+
+        const toIDR = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
+
+        function handleCurrencyInput(el) {
+            let val = el.value.replace(/[^0-9]/g, '');
+            el.value = val ? toIDR(val).replace('Rp ', '') : '';
+            calculate();
+        }
+
+        async function fetchData() {
+            const url = `https://docs.google.com/spreadsheets/d/e/2PACX-1vTjHLUyc7UCb79q96AOF4dBMShS2VK1b534TtAYVKdZggSNEm1luLCr9VPh_yD2N2xHNglAcY-Z7Enj/pub?gid=452057664&single=true&output=csv`;
+            try {
+                const response = await fetch(url);
+                const data = await response.text();
+                const rows = data.split('\n').slice(1);
+                
+                const select = document.getElementById('employeeSelect');
+                select.innerHTML = '<option value="" disabled selected>-- Pilih Karyawan --</option>';
+
+                rows.forEach((row, index) => {
+                    const cols = row.split(',');
+                    const nama = cols[2]?.replace(/"/g, '');
+                    const gaji = parseFloat(cols[8]) || 0;
+                    const bonus = parseFloat(cols[9]) || 0;
+                    const potong = parseFloat(cols[10]) || 0;
+
+                    if (nama) {
+                        employees[index] = { nama, gaji, bonus, potong };
+                        select.innerHTML += `<option value="${index}">${nama}</option>`;
+                    }
+                });
+            } catch (err) {
+                console.error("Error loading CSV:", err);
+            }
+        }
+
+        function updateSalaryForm() {
+            const id = document.getElementById('employeeSelect').value;
+            const emp = employees[id];
+            if(emp) {
+                document.getElementById('salaryForm').classList.remove('hidden');
+                document.getElementById('dispGaji').value = toIDR(emp.gaji);
+                document.getElementById('dispBonus').value = emp.bonus.toLocaleString('id-ID');
+                document.getElementById('dispPotongan').value = toIDR(emp.potong);
+                calculate();
+            }
+        }
+
+        function calculate() {
+            const gaji = parseFloat(document.getElementById('dispGaji').value.replace(/[^0-9]/g, '')) || 0;
+            const bonus = parseFloat(document.getElementById('dispBonus').value.replace(/[^0-9]/g, '')) || 0;
+            const jmlAbsen = parseFloat(document.getElementById('inJmlAbsen').value) || 0;
+            const potongPerHari = parseFloat(document.getElementById('dispPotongan').value.replace(/[^0-9]/g, '')) || 0;
+
+            const totalPotong = jmlAbsen * potongPerHari;
+            const totalGaji = (gaji + bonus) - totalPotong;
+
+            document.getElementById('outTotalPotong').innerText = toIDR(totalPotong);
+            document.getElementById('outGajiBersih').innerText = toIDR(totalGaji);
+        }
+
+        window.onload = fetchData;
+    </script>
+</body>
+</html>
