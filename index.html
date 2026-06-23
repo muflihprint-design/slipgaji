@@ -25,6 +25,18 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Menyembunyikan ikon mata bawaan dari browser HP/Edge */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none;
+        }
+        input[type="password"]::-webkit-credentials-auto-fill-button {
+            visibility: hidden;
+            pointer-events: none;
+            position: absolute;
+            right: 0;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
@@ -60,13 +72,16 @@
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
                     <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
                             <i data-lucide="lock" class="w-5 h-5 text-slate-400"></i>
                         </div>
+                        
                         <input type="password" id="password" required
-                            class="pl-10 pr-10 w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors outline-none"
+                            class="pl-10 pr-12 w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors outline-none relative z-0"
                             placeholder="••••••••">
-                        <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-blue-600 transition-colors cursor-pointer">
+                        
+                        <button type="button" id="toggle-password" 
+                            class="absolute inset-y-0 right-0 px-3 flex items-center justify-center z-10 text-slate-400 hover:text-blue-600 focus:outline-none touch-manipulation">
                             <i data-lucide="eye" id="icon-eye" class="w-5 h-5"></i>
                             <i data-lucide="eye-off" id="icon-eye-off" class="w-5 h-5 hidden"></i>
                         </button>
@@ -87,3 +102,275 @@
     <main id="dashboard-view" class="hidden min-h-screen bg-slate-50 pb-10">
         <nav class="bg-blue-600 text-white sticky top-0 z-10 shadow-md shadow-blue-900/5">
             <div class="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="printer" class="w-5 h-5"></i>
+                    <span class="font-semibold tracking-tight">VI PRINTING</span>
+                </div>
+                <button onclick="logout()" class="p-2 hover:bg-blue-700 rounded-full transition-colors" title="Logout">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </nav>
+
+        <div class="max-w-md mx-auto px-4 mt-6 space-y-6">
+            <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
+                <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl font-bold shrink-0">
+                    <span id="profile-initial">V</span>
+                </div>
+                <div>
+                    <h2 id="profile-nama" class="text-lg font-bold text-slate-800 leading-tight">Nama Karyawan</h2>
+                    <p class="text-sm text-slate-500 mt-0.5 flex items-center gap-1.5">
+                        <i data-lucide="badge-check" class="w-4 h-4 text-green-500"></i>
+                        <span id="profile-jabatan">Jabatan</span>
+                        <span class="text-slate-300">•</span>
+                        <span id="profile-noid" class="font-mono text-xs">ID000</span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between px-1">
+                <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Riwayat Slip Gaji</h3>
+                <span id="total-slip-badge" class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-1 rounded-full">0 Data</span>
+            </div>
+
+            <div id="slips-container" class="space-y-4"></div>
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw03mRWnKxRKTqz2pYBE7qRyXZpbZrToo4_bVXTT8H8jpw5IniHiQ1sg9bwTMQP8jfs5Q/exec";
+        
+        const viewLogin = document.getElementById('login-view');
+        const viewDashboard = document.getElementById('dashboard-view');
+        const formLogin = document.getElementById('login-form');
+        const errorBanner = document.getElementById('login-error');
+        const errorMsg = document.getElementById('login-error-msg');
+        const btnText = document.getElementById('btn-text');
+        const btnLoader = document.getElementById('btn-loader');
+        const btnLogin = document.getElementById('btn-login');
+
+        // Referensi elemen toggle password
+        const passwordInputEl = document.getElementById('password');
+        const togglePasswordBtn = document.getElementById('toggle-password');
+        const iconEye = document.getElementById('icon-eye');
+        const iconEyeOff = document.getElementById('icon-eye-off');
+        
+        document.addEventListener("DOMContentLoaded", checkSession);
+
+        // Fitur Toggle Password
+        togglePasswordBtn.addEventListener('click', () => {
+            const type = passwordInputEl.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInputEl.setAttribute('type', type);
+            
+            if (type === 'text') {
+                iconEye.classList.add('hidden');
+                iconEyeOff.classList.remove('hidden');
+            } else {
+                iconEye.classList.remove('hidden');
+                iconEyeOff.classList.add('hidden');
+            }
+        });
+
+        function checkSession() {
+            const savedData = sessionStorage.getItem("vi_printing_session");
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                renderDashboard(data.user, data.slips);
+                showView('dashboard');
+            } else {
+                showView('login');
+            }
+        }
+
+        formLogin.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const usernameInput = document.getElementById('username').value.trim();
+            const passwordInput = document.getElementById('password').value.trim();
+
+            if(APPS_SCRIPT_URL.includes("ISI_URL")) {
+                showError("Error: Developer belum memasukkan URL Apps Script.");
+                return;
+            }
+
+            setLoading(true);
+            hideError();
+
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({ action: "login", username: usernameInput, password: passwordInput })
+                });
+
+                if (!response.ok) throw new Error("Koneksi ke server gagal.");
+                const result = await response.json();
+
+                if (result.success) {
+                    sessionStorage.setItem("vi_printing_session", JSON.stringify({ user: result.user, slips: result.slips }));
+                    formLogin.reset();
+                    // Kembalikan tipe password ke 'password' jika berhasil login
+                    passwordInputEl.setAttribute('type', 'password');
+                    iconEye.classList.remove('hidden');
+                    iconEyeOff.classList.add('hidden');
+                    
+                    renderDashboard(result.user, result.slips);
+                    showView('dashboard');
+                } else {
+                    showError(result.message || "Login Gagal.");
+                }
+            } catch (error) {
+                showError("Gagal terhubung ke server.");
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        function logout() {
+            sessionStorage.removeItem("vi_printing_session");
+            document.getElementById('slips-container').innerHTML = '';
+            showView('login');
+        }
+
+        function showView(view) {
+            if (view === 'login') {
+                viewDashboard.classList.add('hidden');
+                viewLogin.classList.remove('hidden');
+            } else {
+                viewLogin.classList.add('hidden');
+                viewDashboard.classList.remove('hidden');
+            }
+        }
+
+        function setLoading(isLoading) {
+            if (isLoading) {
+                btnLogin.disabled = true;
+                btnLogin.classList.add('opacity-80', 'cursor-not-allowed');
+                btnText.innerText = "Memverifikasi...";
+                btnLoader.classList.remove('hidden');
+            } else {
+                btnLogin.disabled = false;
+                btnLogin.classList.remove('opacity-80', 'cursor-not-allowed');
+                btnText.innerText = "Masuk ke Portal";
+                btnLoader.classList.add('hidden');
+            }
+        }
+
+        function showError(message) {
+            errorMsg.innerText = message;
+            errorBanner.classList.remove('hidden');
+        }
+
+        function hideError() {
+            errorBanner.classList.add('hidden');
+        }
+
+        function formatRupiah(number) {
+            if (isNaN(number) || number === null || number === "") return "Rp 0";
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(number);
+        }
+
+        function formatPeriod(dateString) {
+            const date = new Date(dateString);
+            const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            return `${months[date.getMonth()].toUpperCase()} ${date.getFullYear()}`;
+        }
+
+        function renderDashboard(user, slips) {
+            document.getElementById('profile-nama').innerText = user.nama || user.username;
+            document.getElementById('profile-jabatan').innerText = user.jabatan || "-";
+            document.getElementById('profile-noid').innerText = "ID: " + user.noid;
+            document.getElementById('profile-initial').innerText = (user.nama || user.username).charAt(0).toUpperCase();
+            document.getElementById('total-slip-badge').innerText = slips.length + " Slip";
+
+            slips.sort((a, b) => new Date(b.periode) - new Date(a.periode));
+
+            const container = document.getElementById('slips-container');
+            container.innerHTML = '';
+
+            if (slips.length === 0) {
+                container.innerHTML = `<div class="text-center bg-white rounded-xl p-8 border border-slate-100 shadow-sm"><i data-lucide="file-x" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i><p class="text-slate-500 text-sm">Belum ada riwayat slip gaji.</p></div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            slips.forEach((slip, index) => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden";
+                
+                // Kondisi tampilan bonus & potongan
+                const bonusRow = slip.bonus > 0 ? `
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-600">Bonus Kehadiran</span>
+                        <span class="font-medium text-emerald-600">+ ${formatRupiah(slip.bonus)}</span>
+                    </div>` : '';
+                
+                const potonganRow = slip.potongan > 0 ? `
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-600">Potongan</span>
+                        <span class="font-medium text-red-500">- ${formatRupiah(slip.potongan)}</span>
+                    </div>` : '';
+
+                card.innerHTML = `
+                    <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-colors" onclick="toggleDetails('slip-${index}')">
+                        <div class="flex flex-col">
+                            <span class="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">Periode</span>
+                            <span class="font-bold text-slate-800">${formatPeriod(slip.periode)}</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-right">
+                            <div class="flex flex-col">
+                                <span class="text-xs text-slate-500 mb-1">Total Diterima</span>
+                                <span class="font-bold text-emerald-600">${formatRupiah(slip.totalGaji)}</span>
+                            </div>
+                            <div class="bg-blue-100 text-blue-600 p-1.5 rounded-md w-7 h-7 flex items-center justify-center">
+                                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200" id="icon-slip-${index}"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="slip-${index}" class="hidden">
+                        <div class="p-4 space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                    <div class="text-xs text-slate-500 mb-1">Total Kehadiran</div>
+                                    <div class="font-semibold text-slate-800">${slip.totalKehadiran || '0'} Hari</div>
+                                </div>
+                                <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                    <div class="text-xs text-slate-500 mb-1">Absen / Izin</div>
+                                    <div class="font-semibold text-slate-800">${slip.absenIzin || '0'} Hari</div>
+                                </div>
+                            </div>
+                            <hr class="border-slate-100">
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-slate-600">Gaji Pokok</span>
+                                    <span class="font-medium text-slate-800">${formatRupiah(slip.gajiPokok)}</span>
+                                </div>
+                                ${bonusRow}
+                                ${potonganRow}
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-dashed border-slate-300 flex justify-between items-center">
+                                <span class="font-bold text-slate-800">Total Gaji Bersih</span>
+                                <span class="text-lg font-bold text-emerald-600">${formatRupiah(slip.totalGaji)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        function toggleDetails(id) {
+            const el = document.getElementById(id);
+            const icon = document.getElementById('icon-' + id);
+            if (el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+            } else {
+                el.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+            }
+        }
+    </script>
+</body>
+</html>
