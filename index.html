@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Slip Gaji | VI PRINTING</title>
+    <title>E-Slip Gaji | BLIMI</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -50,7 +50,7 @@
                 <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-200">
                     <i data-lucide="printer" class="text-white w-8 h-8"></i>
                 </div>
-                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">VI PRINTING</h1>
+                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">BLIMI</h1>
                 <p class="text-sm text-slate-500 mt-1">Portal E-Slip Gaji Karyawan</p>
             </div>
 
@@ -107,7 +107,7 @@
             <div class="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <i data-lucide="printer" class="w-5 h-5"></i>
-                    <span class="font-semibold tracking-tight">VI PRINTING</span>
+                    <span class="font-semibold tracking-tight">BLIMI</span>
                 </div>
                 <button onclick="logout()" class="p-2 hover:bg-blue-700 rounded-full transition-colors" title="Logout">
                     <i data-lucide="log-out" class="w-5 h-5"></i>
@@ -116,21 +116,27 @@
         </nav>
 
         <div class="max-w-md mx-auto px-4 mt-6 space-y-6">
-            <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
-                <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl font-bold shrink-0">
-                    <span id="profile-initial">V</span>
-                </div>
-                <div>
-                    <h2 id="profile-nama" class="text-lg font-bold text-slate-800 leading-tight">Nama Karyawan</h2>
-                    <p class="text-sm text-slate-500 mt-0.5 flex items-center gap-1.5">
-                        <i data-lucide="badge-check" class="w-4 h-4 text-green-500"></i>
-                        <span id="profile-jabatan">-</span> <!-- Jabatan Dikosongkan Sementara -->
-                        <span class="text-slate-300">•</span>
-                        <span id="profile-noid" class="font-mono text-xs">ID000</span>
-                    </p>
-                </div>
-            </div>
-
+<div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex items-center justify-between relative">
+    <div class="flex items-center gap-4">
+        <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl font-bold shrink-0">
+            <span id="profile-initial">V</span>
+        </div>
+        <div>
+            <h2 id="profile-nama" class="text-lg font-bold text-slate-800 leading-tight">Nama Karyawan</h2>
+            <p class="text-sm text-slate-500 mt-0.5 flex items-center gap-1.5">
+                <i data-lucide="badge-check" class="w-4 h-4 text-green-500"></i>
+                <span id="profile-jabatan">-</span>
+                <span class="text-slate-300">•</span>
+                <span id="profile-noid" class="font-mono text-xs">ID000</span>
+            </p>
+        </div>
+    </div>
+    <!-- Tombol Ubah Password/Username -->
+    <button onclick="openEditModal()" class="p-2 text-slate-400 hover:bg-slate-100 hover:text-blue-600 rounded-full transition-colors" title="Ubah Profil">
+        <i data-lucide="settings" class="w-5 h-5"></i>
+    </button>
+</div>
+            
             <div class="flex items-center justify-between px-1">
                 <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Riwayat Slip Gaji</h3>
                 <span id="total-slip-badge" class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-1 rounded-full">0 Data</span>
@@ -138,6 +144,47 @@
 
             <div id="slips-container" class="space-y-4"></div>
         </div>
+
+        <!-- Modal Ubah Profil (Username & Password) -->
+<div id="edit-profile-modal" class="hidden fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 border border-slate-100 relative">
+        <div class="flex justify-between items-center mb-5">
+            <h3 class="text-lg font-bold text-slate-800">Ubah Profil Akun</h3>
+            <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-700 transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        
+        <form id="edit-profile-form" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Username Baru</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i data-lucide="user" class="w-4 h-4 text-slate-400"></i>
+                    </div>
+                    <input type="text" id="new-username" class="pl-9 w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-colors" required>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Password Baru</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i data-lucide="lock" class="w-4 h-4 text-slate-400"></i>
+                    </div>
+                    <input type="password" id="new-password" class="pl-9 w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-colors" placeholder="Kosongkan jika tidak ingin diubah">
+                </div>
+                <p class="text-xs text-slate-400 mt-1">Biarkan kosong jika Anda hanya ingin mengubah username.</p>
+            </div>
+
+            <div class="pt-2">
+                <button type="submit" id="btn-save-profile" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    Simpan Perubahan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
     </main>
 
     <script>
@@ -180,6 +227,75 @@
             }
         });
 
+        // --- LOGIKA UBAH PROFIL --- //
+
+function openEditModal() {
+    const session = JSON.parse(sessionStorage.getItem("vi_printing_session"));
+    if (session) {
+        // Isi input dengan username yang sedang digunakan
+        document.getElementById('new-username').value = session.user.username || session.user.name;
+        document.getElementById('new-password').value = ""; // Reset form password
+    }
+    document.getElementById('edit-profile-modal').classList.remove('hidden');
+    lucide.createIcons();
+}
+
+function closeEditModal() {
+    document.getElementById('edit-profile-modal').classList.add('hidden');
+}
+
+document.getElementById('edit-profile-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const newUsername = document.getElementById('new-username').value.trim();
+    const newPassword = document.getElementById('new-password').value.trim();
+    const btnSave = document.getElementById('btn-save-profile');
+    
+    const sessionData = sessionStorage.getItem("vi_printing_session");
+    if (!sessionData) return;
+    const session = JSON.parse(sessionData);
+
+    // Animasi Loading
+    btnSave.disabled = true;
+    btnSave.innerHTML = `<div class="loader inline-block"></div> Menyimpan...`;
+
+    try {
+        // Siapkan objek data untuk diupdate
+        let updateData = { username: newUsername };
+        if (newPassword !== "") {
+            updateData.password = newPassword; // Hanya diupdate jika input password diisi
+        }
+
+        // Jalankan perintah update ke Supabase tabel 'employees'
+        const { data, error } = await supabaseClient
+            .from('employees')
+            .update(updateData)
+            .eq('code', session.user.code) // Asumsi field identifier adalah 'code'
+            .select();
+
+        if (error) throw error;
+
+        // Perbarui Sesi Pengguna di Browser
+        if (data && data.length > 0) {
+            session.user = data[0];
+            sessionStorage.setItem("vi_printing_session", JSON.stringify(session));
+            
+            // Perbarui UI secara langsung
+            document.getElementById('profile-nama').innerText = session.user.name || session.user.username;
+            
+            alert("Profil berhasil diperbarui!");
+            closeEditModal();
+        }
+        
+    } catch (error) {
+        console.error("Gagal update profil:", error);
+        alert("Terjadi kesalahan saat memperbarui profil. Pastikan koneksi aman.");
+    } finally {
+        // Kembalikan kondisi tombol
+        btnSave.disabled = false;
+        btnSave.innerText = "Simpan Perubahan";
+    }
+});
+
         function checkSession() {
             const savedData = sessionStorage.getItem("vi_printing_session");
             if (savedData) {
@@ -201,10 +317,11 @@
 
             try {
                 // 1. Cek User di tabel employees (bisa menggunakan name atau username)
+                // 1. Cek User di tabel employees (bisa menggunakan name atau username)
                 const { data: users, error: authError } = await supabaseClient
                     .from('employees')
                     .select('*')
-                    .or(`username.eq.${usernameInput},name.eq.${usernameInput}`)
+                    .or(`username.ilike.${usernameInput},name.ilike.${usernameInput}`)
                     .eq('password', passwordInput);
 
                 if (authError) throw authError;
