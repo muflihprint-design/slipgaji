@@ -103,7 +103,7 @@
     </main>
 
     <main id="dashboard-view" class="hidden min-h-screen bg-slate-50 pb-10">
-        <nav class="bg-blue-600 text-white sticky top-0 z-10 shadow-md shadow-blue-900/5">
+        <nav class="bg-blue-600 text-white sticky top-0 z-40 shadow-md shadow-blue-900/5">
             <div class="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <i data-lucide="printer" class="w-5 h-5"></i>
@@ -116,6 +116,27 @@
         </nav>
 
         <div class="max-w-md mx-auto px-4 mt-6 space-y-6">
+            <!-- PANEL ADMINISTRATOR (Disembunyikan secara default) -->
+            <div id="admin-panel" class="hidden bg-indigo-50 border border-indigo-200 rounded-xl p-4 shadow-sm mb-2 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-16 h-16 bg-indigo-100 rounded-bl-full -z-0"></div>
+                <div class="relative z-10">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-sm font-bold text-indigo-800 flex items-center gap-2">
+                            <i data-lucide="shield-check" class="w-4 h-4"></i> Mode Administrator
+                        </h3>
+                        <!-- Tombol WA -->
+                        <button id="btnManualSend" onclick="triggerManualSend()" class="text-[10px] sm:text-xs bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-3 rounded-lg shadow-sm transition-colors flex items-center gap-1">
+                            <i data-lucide="message-square" class="w-3 h-3"></i> Kirim WA
+                        </button>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold text-indigo-700 mb-1.5 uppercase tracking-wider">Pilih Karyawan untuk Dilihat:</label>
+                        <select id="adminEmployeeSelect" onchange="onAdminSelectEmployee(this.value)" class="w-full p-2.5 text-sm font-medium border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white shadow-sm cursor-pointer">
+                            <option value="" disabled selected>Memuat data karyawan...</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
 <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex items-center justify-between relative">
     <div class="flex items-center gap-4">
         <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl font-bold shrink-0">
@@ -131,8 +152,8 @@
             </p>
         </div>
     </div>
-    <!-- Tombol Ubah Password/Username -->
-    <button onclick="openEditModal()" class="p-2 text-slate-400 hover:bg-slate-100 hover:text-blue-600 rounded-full transition-colors" title="Ubah Profil">
+       <!-- Tombol Ubah Password/Username -->
+    <button id="btn-settings-profile" onclick="openEditModal()" class="p-2 text-slate-400 hover:bg-slate-100 hover:text-blue-600 rounded-full transition-colors" title="Ubah Profil">
         <i data-lucide="settings" class="w-5 h-5"></i>
     </button>
 </div>
@@ -142,8 +163,55 @@
                 <span id="total-slip-badge" class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-1 rounded-full">0 Data</span>
             </div>
 
-            <div id="slips-container" class="space-y-4"></div>
+          <!-- UI Kalender Absensi -->
+<div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 mb-6">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Kalender Absensi</h3>
+        <select id="periodFilter" class="p-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"></select>
+    </div>
+    
+    <!-- Perbaikan: Mengubah grid menjadi 3 kolom untuk menampilkan Izin/Bolos -->
+    <div class="grid grid-cols-3 gap-2 mb-4 text-center">
+        <div class="bg-blue-50/50 border border-blue-100 p-2 rounded-lg">
+            <span class="block text-[9px] md:text-[10px] font-semibold text-slate-500">SELISIH JAM</span>
+            <span id="diffHoursDisplay" class="text-sm md:text-base font-bold text-blue-600">-</span>
         </div>
+        <div class="bg-blue-50/50 border border-blue-100 p-2 rounded-lg">
+            <span class="block text-[9px] md:text-[10px] font-semibold text-slate-500">HADIR/TARGET</span>
+            <span id="attendanceSummary" class="text-sm md:text-base font-bold text-emerald-600">-</span>
+        </div>
+        <div class="bg-blue-50/50 border border-blue-100 p-2 rounded-lg">
+            <span class="block text-[9px] md:text-[10px] font-semibold text-slate-500">IZIN/BOLOS</span>
+            <span id="absenceSummary" class="text-sm md:text-base font-bold text-rose-600">-</span>
+        </div>
+    </div>
+
+    <!-- Header Hari -->
+    <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold mb-2 text-slate-500">
+        <div class="text-red-500">Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div>
+    </div>
+    
+    <!-- Grid Kalender -->
+    <!-- Grid Kalender -->
+    <div id="calendarView" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
+
+    <!-- Keterangan / Legenda (Dimodifikasi dengan ID) -->
+    <div class="mt-5 pt-4 border-t border-slate-100">
+        <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 text-center">Keterangan Indikator</h4>
+        <div class="flex flex-wrap justify-center gap-2 text-[9px] md:text-[10px] font-medium text-slate-600">
+            <!-- Indikator Umum (Selalu Muncul) -->
+            <div class="flex items-center px-2 py-1 bg-slate-50 rounded-full border border-slate-200"><span class="w-2.5 h-2.5 bg-emerald-500 mr-1.5 rounded-full"></span>Lengkap</div>
+            <div class="flex items-center px-2 py-1 bg-slate-50 rounded-full border border-slate-200"><span class="w-2.5 h-2.5 bg-amber-400 mr-1.5 rounded-full"></span>Masuk</div>
+            <div class="flex items-center px-2 py-1 bg-slate-50 rounded-full border border-slate-200"><span class="w-2.5 h-2.5 bg-rose-500 mr-1.5 rounded-full"></span>Keluar</div>
+            <div class="flex items-center px-2 py-1 bg-blue-50 rounded-full border border-blue-100 text-blue-700"><span class="w-2.5 h-2.5 bg-blue-300 mr-1.5 rounded-full"></span>Libur</div>
+            
+            <!-- Indikator Khusus Part-Time (Disembunyikan secara default menggunakan id="legenda-part-time") -->
+            <div id="legenda-part-time-1" class="hidden items-center px-2 py-1 bg-rose-50 rounded-full border border-rose-200 text-rose-700"><span class="w-2.5 h-2.5 bg-rose-500 mr-1.5 rounded-full flex items-center justify-center text-white text-[7px]">!</span>Target Wajib</div>
+            <div id="legenda-part-time-2" class="hidden items-center px-2 py-1 bg-emerald-50 rounded-full border border-emerald-200 text-emerald-700"><span class="w-2.5 h-2.5 bg-emerald-400 mr-1.5 rounded-full flex items-center justify-center text-white text-[7px]">✓</span>Surplus</div>
+        </div>
+    </div>
+</div>
+<div id="slips-container" class="space-y-4"></div>
 
         <!-- Modal Ubah Profil (Username & Password) -->
 <div id="edit-profile-modal" class="hidden fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
@@ -211,6 +279,29 @@
         const iconEye = document.getElementById('icon-eye');
         const iconEyeOff = document.getElementById('icon-eye-off');
         
+
+// ==========================================
+// 1. MANAJEMEN STATE & UTILITAS (BARU)
+// ==========================================
+const AppState = {
+    user: null,
+    attendance: [],
+    holidays: new Set(),
+    admin: {
+        employees: {},
+        attendance: []
+    }
+};
+
+// Fungsi Utilitas untuk menghindari kode berulang saat memecah tanggal
+function parseStartDate(dateString) {
+    if (dateString && dateString.includes('-')) {
+        const [y, m, d] = dateString.split('-').map(Number);
+        return new Date(Date.UTC(y, m - 1, d));
+    }
+    return new Date(Date.UTC(2024, 0, 1)); // Fallback default
+}
+
         document.addEventListener("DOMContentLoaded", checkSession);
 
         // Fitur Toggle Password
@@ -227,6 +318,313 @@
             }
         });
 
+
+function hitungDurasiDecimal(jamMasuk, jamKeluar) {
+            const [h1, m1] = jamMasuk.split(':').map(Number);
+            const [h2, m2] = jamKeluar.split(':').map(Number);
+            if(isNaN(h1) || isNaN(h2)) return 0;
+            let diff = (h2 * 60 + m2) - (h1 * 60 + m1);
+            if (diff < 0) diff += 24 * 60; 
+            return diff / 60;
+        }
+
+// ==========================================
+// 4. KALENDER (State & Optimasi DOM)
+// ==========================================
+async function loadCalendarData(user) {
+    AppState.user = user;
+    try {
+        const [
+            { data: attendance, error: errAtt },
+            { data: holidays, error: errHol }
+        ] = await Promise.all([
+            supabaseClient.from('attendance')
+                .select('date, "employeeCode", "checkIn", "checkOut"')
+                .eq('employeeCode', user.code),
+            supabaseClient.from('holidays').select('start_date, end_date')
+        ]);
+
+        if (errAtt) throw errAtt;
+        if (errHol) throw errHol;
+
+        AppState.attendance = attendance || [];
+        AppState.holidays.clear();
+        
+        (holidays || []).forEach(h => {
+            const startStr = h.start_date.split(' ')[0].split('T')[0]; 
+            const endStr = (h.end_date || h.start_date).split(' ')[0].split('T')[0];
+            let dStart = new Date(startStr + 'T00:00:00Z');
+            let dEnd = new Date(endStr + 'T00:00:00Z');
+            for (let d = new Date(dStart); d <= dEnd; d.setUTCDate(d.getUTCDate() + 1)) {
+                AppState.holidays.add(d.toISOString().split('T')[0]);
+            }
+        });
+
+        updatePeriods(); 
+    } catch(e) {
+        console.error("Gagal memuat data kalender:", e);
+    }
+}
+
+function updatePeriods() {
+    const filter = document.getElementById('periodFilter');
+    let optionsHTML = ''; // Optimasi DOM
+    
+    const start = parseStartDate(AppState.user?.start_date);
+    const today = new Date();
+    const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+    let currentPeriodIdx = 0;
+
+    for (let i = 0; i < 12; i++) {
+        const dStart = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + i, start.getUTCDate()));
+        const dEnd = new Date(Date.UTC(dStart.getUTCFullYear(), dStart.getUTCMonth() + 1, dStart.getUTCDate() - 1));
+        const label = `Periode ${dStart.getUTCDate()} ${dStart.toLocaleString('id-ID', {month:'short', timeZone: 'UTC'})} - ${dEnd.getUTCDate()} ${dEnd.toLocaleString('id-ID', {month:'short', timeZone: 'UTC'})} ${dEnd.getUTCFullYear()}`;
+        
+        if (todayUTC >= dStart) {
+            currentPeriodIdx = i;
+        }
+        optionsHTML += `<option value="${i}">${label}</option>`;
+    }
+    
+    filter.innerHTML = optionsHTML; // Render DOM 1 kali
+    filter.value = currentPeriodIdx; 
+    renderCalendar();
+}
+
+function renderCalendar() {
+    const kary = AppState.user;
+    if (!kary) return; 
+    
+    const periodVal = document.getElementById('periodFilter').value;
+    const periodIdx = periodVal ? parseInt(periodVal) : 0;
+    const view = document.getElementById('calendarView');
+    
+    let calendarHTML = ''; // OPTIMASI: Penampung DOM String
+
+    const start = parseStartDate(kary.start_date);
+    const isPartTime = !!(kary.position && String(kary.position).toLowerCase().replace(/-/g, ' ').includes('part time'));
+    
+    const legPartTime1 = document.getElementById('legenda-part-time-1');
+    const legPartTime2 = document.getElementById('legenda-part-time-2');
+    
+    if (isPartTime) {
+        if(legPartTime1) { legPartTime1.classList.replace('hidden', 'flex'); }
+        if(legPartTime2) { legPartTime2.classList.replace('hidden', 'flex'); }
+    } else {
+        if(legPartTime1) { legPartTime1.classList.replace('flex', 'hidden'); }
+        if(legPartTime2) { legPartTime2.classList.replace('flex', 'hidden'); }
+    }
+
+    const shiftValue = parseInt(kary.shift_type) || 1;
+    const shiftDays = shiftValue === 2 ? [4, 5, 6] : [1, 2, 3];
+    const jamKerja = parseFloat(kary.working_hours) || 8;
+
+    const now = new Date();
+    const todayUTC = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+    const dStart = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + periodIdx, start.getUTCDate()));
+    const dEnd = new Date(Date.UTC(dStart.getUTCFullYear(), dStart.getUTCMonth() + 1, dStart.getUTCDate() - 1));
+
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const daysInPeriod = Math.round((dEnd - dStart) / msPerDay) + 1;
+
+    const dailyData = {};
+    AppState.attendance.forEach(r => {
+        dailyData[r.date] = { 
+            jam: {
+                masuk: (r.checkIn && r.checkIn !== '--') ? r.checkIn : null,
+                keluar: (r.checkOut && r.checkOut !== '--') ? r.checkOut : null
+            } 
+        };
+    });
+
+    let wajibDaysSet = new Set();
+    let coveredDaysSet = new Set();
+    
+    // Logika perhitungan PartTime...
+    if (isPartTime) {
+        let weeks = [];
+        let currentWeek = { targetDays: [], attendedDays: [] };
+        
+        for (let i = 0; i < daysInPeriod; i++) {
+            const d = new Date(Date.UTC(dStart.getUTCFullYear(), dStart.getUTCMonth(), dStart.getUTCDate() + i));
+            const dateStr = d.toISOString().split('T')[0];
+            const isAhad = d.getUTCDay() === 0;
+            const dayOfWeek = d.getUTCDay();
+            const isLibur = AppState.holidays.has(dateStr);
+            const data = dailyData[dateStr];
+            
+            const hasMasuk = data && (data.jam.masuk || data.jam.keluar);
+            
+            if (!isLibur && shiftDays.includes(dayOfWeek)) {
+                currentWeek.targetDays.push(dateStr);
+            }
+            if (hasMasuk) {
+                currentWeek.attendedDays.push(dateStr);
+            }
+            
+            if (isAhad || i === daysInPeriod - 1) {
+                weeks.push(currentWeek);
+                currentWeek = { targetDays: [], attendedDays: [] };
+            }
+        }
+        
+        let balanceSurplus = 0; 
+        weeks.forEach(w => {
+            const attendedOnTarget = w.targetDays.filter(td => w.attendedDays.includes(td)).length;
+            const extraAttendances = w.attendedDays.length - attendedOnTarget;
+            let availableSurplus = Math.max(0, balanceSurplus) + extraAttendances;
+            
+            w.targetDays.forEach(td => {
+                const attendedThisDay = w.attendedDays.includes(td);
+                if (availableSurplus > 0 && !attendedThisDay) {
+                    coveredDaysSet.add(td);
+                    availableSurplus--; 
+                } else {
+                    wajibDaysSet.add(td);
+                }
+            });
+            balanceSurplus = balanceSurplus + w.attendedDays.length - w.targetDays.length;
+        });
+    }
+
+    let totalDurasi = 0, hariMasuk = 0, totalHariKerja = 0, hariBolos = 0, dataLengkap = true;
+    const offset = dStart.getUTCDay();
+    
+    // BUILD HTML: Kotak kosong awal bulan
+    for(let i = 0; i < offset; i++) {
+        calendarHTML += `<div class="p-1 md:p-2 rounded-lg bg-transparent min-h-[60px] md:min-h-[85px]"></div>`;
+    }
+
+    const formatWaktu = (waktu) => {
+        if (!waktu) return "";
+        const p = waktu.split(':');
+        return p.length >= 2 ? `${parseInt(p[0], 10)}:${p[1]}` : waktu;
+    };
+
+    // BUILD HTML: Hari dalam sebulan
+    for (let i = 0; i < daysInPeriod; i++) {
+        const d = new Date(Date.UTC(dStart.getUTCFullYear(), dStart.getUTCMonth(), dStart.getUTCDate() + i));
+        const dateStr = d.toISOString().split('T')[0];
+        const data = dailyData[dateStr];
+        
+        const isAhad = d.getUTCDay() === 0;
+        const dayOfWeek = d.getUTCDay();
+        const isLibur = AppState.holidays.has(dateStr);
+
+        const hasMasuk = data && data.jam.masuk;
+        const hasKeluar = data && data.jam.keluar;
+        const attendedAny = hasMasuk || hasKeluar;
+        
+        const isWajib = isPartTime && wajibDaysSet.has(dateStr);
+        const isCovered = isPartTime && coveredDaysSet.has(dateStr);
+        const isExtraShift = isPartTime && attendedAny && !shiftDays.includes(dayOfWeek);
+
+        if (d <= todayUTC) {
+            if (isPartTime) {
+                if (shiftDays.includes(dayOfWeek) && !isLibur) totalHariKerja++; 
+                if (attendedAny) hariMasuk++;
+            } else {
+                if (!isAhad && !isLibur) {
+                    totalHariKerja++;
+                    if (attendedAny) hariMasuk++;
+                    else hariBolos++;
+                } else {
+                    if (attendedAny) hariMasuk++; 
+                }
+            }
+        }
+
+        let bg = 'bg-white border-slate-200', info = "";
+        let indicator = "";
+
+        if (isPartTime) {
+            if (isWajib) indicator = `<span class="absolute -top-1 -right-1 flex h-3 w-3 z-10" title="Hari Wajib Masuk"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span><span class="relative flex justify-center items-center rounded-full h-full w-full bg-rose-500 shadow border-2 border-white text-[7px] text-white font-bold">!</span></span>`;
+            else if (isCovered) indicator = `<span class="absolute -top-1 -right-1 flex h-3 w-3 z-10" title="Shift Tercover Surplus"><span class="relative flex justify-center items-center rounded-full h-full w-full bg-emerald-400 shadow border-2 border-white text-[7px] text-white font-bold">✓</span></span>`;
+            else if (isExtraShift) indicator = `<span class="absolute -top-1 -left-1 flex h-3 w-3 z-10" title="Kehadiran Ekstra (+)"><span class="relative flex justify-center items-center rounded-full h-full w-full bg-blue-500 shadow border-2 border-white text-[7px] text-white font-bold">+</span></span>`;
+        }
+
+        if (isLibur) {
+            bg = 'bg-blue-100 border-blue-300 text-blue-900';
+            if (hasMasuk || hasKeluar) {
+                let textDurasi = "";
+                if (hasMasuk && hasKeluar) {
+                    const durasi = hitungDurasiDecimal(data.jam.masuk, data.jam.keluar);
+                    totalDurasi += durasi;
+                    textDurasi = `<div class="mt-0.5 px-1 bg-white/50 rounded text-[8px] font-bold">${durasi.toFixed(2)}j</div>`;
+                }
+                info = indicator + `
+                    <div class="text-[8px] md:text-[9px] font-medium mt-0.5">M ${formatWaktu(data.jam.masuk)}</div>
+                    <div class="text-[8px] md:text-[9px] font-medium">K ${formatWaktu(data.jam.keluar)}</div>
+                    ${textDurasi}`;
+            } else {
+                info = indicator + `<div class="text-[8px] mt-1 font-bold opacity-60">LIBUR</div>`;
+            }
+        } else if (hasMasuk && hasKeluar) {
+            bg = 'bg-emerald-500 border-emerald-600 text-white shadow-sm';
+            const durasi = hitungDurasiDecimal(data.jam.masuk, data.jam.keluar);
+            totalDurasi += durasi;
+            info = indicator + `
+                <div class="text-[8px] md:text-[10px] font-medium opacity-90 mt-0.5">M ${formatWaktu(data.jam.masuk)}</div>
+                <div class="text-[8px] md:text-[10px] font-medium opacity-90">K ${formatWaktu(data.jam.keluar)}</div>
+                <div class="mt-0.5 px-1 py-0.5 bg-white/20 rounded text-[8px] md:text-[9px] font-bold">${durasi.toFixed(2)}j</div>`;
+        } else if (hasMasuk) {
+            bg = 'bg-amber-400 border-amber-500 text-amber-900 shadow-sm';
+            info = indicator + `<div class="text-[8px] md:text-[10px] font-semibold mt-1 bg-white/30 px-1 py-0.5 rounded">M ${formatWaktu(data.jam.masuk)}</div>`;
+            dataLengkap = false;
+        } else if (hasKeluar) {
+            bg = 'bg-rose-500 border-rose-600 text-white shadow-sm';
+            info = indicator + `<div class="text-[8px] md:text-[10px] font-semibold mt-1 bg-white/20 px-1 py-0.5 rounded">K ${formatWaktu(data.jam.keluar)}</div>`;
+            dataLengkap = false;
+        } else if (d < todayUTC && !isLibur && !isAhad) { 
+            if (isPartTime) {
+                if (isWajib) {
+                    bg = 'bg-red-50 border-red-200 text-red-500';
+                    info = indicator + `<div class="text-[8px] mt-1 font-bold opacity-80">ALFA</div>`;
+                } else if (isCovered) {
+                    bg = 'bg-emerald-50 border-emerald-100 text-emerald-600';
+                    info = indicator + `<div class="text-[7px] mt-1 font-bold opacity-80">BEBAS</div>`;
+                } else {
+                    bg = 'bg-slate-50 border-slate-100 text-slate-300 opacity-70'; 
+                }
+            } else {
+                bg = 'bg-slate-100 border-slate-200 text-slate-400';
+            }
+        } else if (isAhad) {
+            bg = 'bg-red-50 border-red-100 text-red-400';
+        } else if (d >= todayUTC) {
+            info = indicator + info;
+        }
+        
+        calendarHTML += `
+            <div class="p-1 border rounded-lg relative ${bg} min-h-[60px] md:min-h-[85px] flex flex-col items-center justify-start pt-1.5 transition-colors">
+                <span class="font-bold text-[10px] md:text-xs">${d.getUTCDate()}</span>
+                ${info}
+            </div>`;
+    }
+    
+    // Render ke DOM HANYA 1 KALI
+    view.innerHTML = calendarHTML;
+
+    // Update kesimpulan
+    if (isPartTime) hariBolos = Math.max(0, totalHariKerja - hariMasuk);
+    const selisih = totalDurasi - (hariMasuk * jamKerja);
+    const diffDisplay = document.getElementById('diffHoursDisplay');
+    
+    if (dataLengkap) {
+        diffDisplay.innerText = selisih.toFixed(2);
+        diffDisplay.className = selisih >= 0 ? "text-sm md:text-base font-bold text-emerald-600" : "text-sm md:text-base font-bold text-rose-600";
+    } else {
+        diffDisplay.innerText = "Tdk Lengkap";
+        diffDisplay.className = "text-[9px] md:text-xs font-bold text-amber-600 flex items-center h-full justify-center";
+    }
+    
+    document.getElementById('attendanceSummary').innerText = `${hariMasuk}/${totalHariKerja}`;
+    if (document.getElementById('absenceSummary')) {
+        document.getElementById('absenceSummary').innerText = hariBolos;
+    }
+}
+
+document.getElementById('periodFilter').addEventListener('change', renderCalendar);
         // --- LOGIKA UBAH PROFIL --- //
 
 function openEditModal() {
@@ -300,7 +698,7 @@ document.getElementById('edit-profile-form').addEventListener('submit', async (e
             const savedData = sessionStorage.getItem("vi_printing_session");
             if (savedData) {
                 const data = JSON.parse(savedData);
-                renderDashboard(data.user, data.slips);
+                initDashboard(data.user, data.slips); // Ubah dari renderDashboard ke initDashboard
                 showView('dashboard');
             } else {
                 showView('login');
@@ -316,7 +714,6 @@ document.getElementById('edit-profile-form').addEventListener('submit', async (e
             hideError();
 
             try {
-                // 1. Cek User di tabel employees (bisa menggunakan name atau username)
                 // 1. Cek User di tabel employees (bisa menggunakan name atau username)
                 const { data: users, error: authError } = await supabaseClient
                     .from('employees')
@@ -337,17 +734,16 @@ document.getElementById('edit-profile-form').addEventListener('submit', async (e
                         .order('id', { ascending: false }); // Urutkan dari yang terbaru (opsional berdasarkan ID)
 
                     if (slipsError) throw slipsError;
-
+                    
                     // 3. Simpan sesi & render
                     sessionStorage.setItem("vi_printing_session", JSON.stringify({ user: user, slips: slips || [] }));
                     formLogin.reset();
                     
-                    // Kembalikan tipe password ke 'password' jika berhasil login
                     passwordInputEl.setAttribute('type', 'password');
                     iconEye.classList.remove('hidden');
                     iconEyeOff.classList.add('hidden');
                     
-                    renderDashboard(user, slips || []);
+                    initDashboard(user, slips || []); // Ubah dari renderDashboard ke initDashboard
                     showView('dashboard');
                 } else {
                     showError("Username/Nama atau Password salah.");
@@ -360,11 +756,27 @@ document.getElementById('edit-profile-form').addEventListener('submit', async (e
             }
         });
 
-        function logout() {
-            sessionStorage.removeItem("vi_printing_session");
-            document.getElementById('slips-container').innerHTML = '';
-            showView('login');
-        }
+// ==========================================
+// 2. LOGOUT (Diperbarui)
+// ==========================================
+function logout() {
+    sessionStorage.removeItem("vi_printing_session");
+    
+    // Reset DOM
+    document.getElementById('slips-container').innerHTML = '';
+    document.getElementById('calendarView').innerHTML = '';
+    document.getElementById('attendanceSummary').innerText = '-';
+    document.getElementById('diffHoursDisplay').innerText = '-';
+    
+    // Reset State secara elegan
+    AppState.user = null;
+    AppState.attendance = [];
+    AppState.holidays.clear();
+    AppState.admin.employees = {};
+    AppState.admin.attendance = [];
+    
+    showView('login');
+}
 
         function showView(view) {
             if (view === 'login') {
@@ -415,104 +827,378 @@ document.getElementById('edit-profile-form').addEventListener('submit', async (e
             return `${months[date.getMonth()].toUpperCase()} ${date.getFullYear()}`;
         }
 
-        function renderDashboard(user, slips) {
-            // Mapping fields Supabase ke UI
-            const namaKaryawan = user.name || user.username || 'Karyawan';
-            
-            document.getElementById('profile-nama').innerText = namaKaryawan;
-            document.getElementById('profile-jabatan').innerText = "-"; // Jabatan dikosongkan sementara
-            document.getElementById('profile-noid').innerText = "ID: " + user.code;
-            document.getElementById('profile-initial').innerText = namaKaryawan.charAt(0).toUpperCase();
-            document.getElementById('total-slip-badge').innerText = slips.length + " Slip";
+// ==========================================
+// 3. RENDER DASHBOARD (Optimasi DOM)
+// ==========================================
+function renderDashboard(user, slips) {
+    const namaKaryawan = user.name || user.username || 'Karyawan';
+    document.getElementById('profile-nama').innerText = namaKaryawan;
+    document.getElementById('profile-jabatan').innerText = "-"; 
+    document.getElementById('profile-noid').innerText = "ID: " + user.code;
+    document.getElementById('profile-initial').innerText = namaKaryawan.charAt(0).toUpperCase();
+    document.getElementById('total-slip-badge').innerText = slips.length + " Slip";
 
-            const container = document.getElementById('slips-container');
-            container.innerHTML = '';
-
-            if (slips.length === 0) {
-                container.innerHTML = `<div class="text-center bg-white rounded-xl p-8 border border-slate-100 shadow-sm"><i data-lucide="file-x" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i><p class="text-slate-500 text-sm">Belum ada riwayat slip gaji.</p></div>`;
-                lucide.createIcons();
-                return;
-            }
-
-            slips.forEach((slip, index) => {
-                const card = document.createElement('div');
-                card.className = "bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden";
-                
-                // Sanitasi data null dari database
-                const lembur = slip.lembur || 0;
-                const bonus = slip.bonus || 0;
-                const potongan = slip.potongan || 0;
-                const gajiPokok = slip.gaji_pokok || 0;
-                const totalGaji = slip.total_gaji || 0;
-
-                // Kondisi tampilan lembur, bonus & potongan
-                const lemburRow = lembur > 0 ? `
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-600">Lembur</span>
-                        <span class="font-medium text-blue-600">+ ${formatRupiah(lembur)}</span>
-                    </div>` : '';
-
-                const bonusRow = bonus > 0 ? `
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-600">Bonus Kehadiran</span>
-                        <span class="font-medium text-emerald-600">+ ${formatRupiah(bonus)}</span>
-                    </div>` : '';
-                
-                const potonganRow = potongan > 0 ? `
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-600">Potongan</span>
-                        <span class="font-medium text-red-500">- ${formatRupiah(potongan)}</span>
-                    </div>` : '';
-
-                card.innerHTML = `
-                    <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-colors" onclick="toggleDetails('slip-${index}')">
-                        <div class="flex flex-col">
-                            <span class="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">Periode</span>
-                            <span class="font-bold text-slate-800">${formatPeriod(slip.periode)}</span>
-                        </div>
-                        <div class="flex items-center gap-3 text-right">
-                            <div class="flex flex-col">
-                                <span class="text-xs text-slate-500 mb-1">Total Diterima</span>
-                                <span class="font-bold text-emerald-600">${formatRupiah(totalGaji)}</span>
-                            </div>
-                            <div class="bg-blue-100 text-blue-600 p-1.5 rounded-md w-7 h-7 flex items-center justify-center">
-                                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200" id="icon-slip-${index}"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="slip-${index}" class="hidden">
-                        <div class="p-4 space-y-4">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                                    <div class="text-xs text-slate-500 mb-1">Total Kehadiran</div>
-                                    <div class="font-semibold text-slate-800">${slip.total_kehadiran || '0'} Hari</div>
-                                </div>
-                                <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                                    <div class="text-xs text-slate-500 mb-1">Absen / Izin</div>
-                                    <div class="font-semibold text-slate-800">${slip.absen_izin || '0'} Hari</div>
-                                </div>
-                            </div>
-                            <hr class="border-slate-100">
-                            <div class="space-y-2 text-sm">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-slate-600">Gaji Pokok</span>
-                                    <span class="font-medium text-slate-800">${formatRupiah(gajiPokok)}</span>
-                                </div>
-                                ${lemburRow}
-                                ${bonusRow}
-                                ${potonganRow}
-                            </div>
-                            <div class="mt-4 pt-3 border-t border-dashed border-slate-300 flex justify-between items-center">
-                                <span class="font-bold text-slate-800">Total Gaji Bersih</span>
-                                <span class="text-lg font-bold text-emerald-600">${formatRupiah(totalGaji)}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-            lucide.createIcons();
+    const btnSettings = document.getElementById('btn-settings-profile');
+    const sessionData = sessionStorage.getItem("vi_printing_session");
+    if (sessionData && btnSettings) {
+        const session = JSON.parse(sessionData);
+        if (user.code !== session.user.code) {
+            btnSettings.classList.add('hidden');
+        } else {
+            btnSettings.classList.remove('hidden');
         }
+    }
+
+    // Load kalender dengan state baru
+    loadCalendarData(user);
+
+    const container = document.getElementById('slips-container');
+    
+    if (slips.length === 0) {
+        container.innerHTML = `<div class="text-center bg-white rounded-xl p-8 border border-slate-100 shadow-sm"><i data-lucide="file-x" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i><p class="text-slate-500 text-sm">Belum ada riwayat slip gaji.</p></div>`;
+        lucide.createIcons();
+        return; 
+    }
+
+    // OPTIMASI: Kumpulkan HTML dalam bentuk string terlebih dahulu
+    let slipsHTML = '';
+    slips.forEach((slip, index) => {
+        const lembur = slip.lembur || 0;
+        const bonus = slip.bonus || 0;
+        const potongan = slip.potongan || 0;
+        const gajiPokok = slip.gaji_pokok || 0;
+        const totalGaji = slip.total_gaji || 0;
+
+        const lemburRow = lembur > 0 ? `<div class="flex justify-between items-center"><span class="text-slate-600">Lembur</span><span class="font-medium text-blue-600">+ ${formatRupiah(lembur)}</span></div>` : '';
+        const bonusRow = bonus > 0 ? `<div class="flex justify-between items-center"><span class="text-slate-600">Bonus Kehadiran</span><span class="font-medium text-emerald-600">+ ${formatRupiah(bonus)}</span></div>` : '';
+        const potonganRow = potongan > 0 ? `<div class="flex justify-between items-center"><span class="text-slate-600">Potongan</span><span class="font-medium text-red-500">- ${formatRupiah(potongan)}</span></div>` : '';
+
+        slipsHTML += `
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-4">
+                <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-colors" onclick="toggleDetails('slip-${index}')">
+                    <div class="flex flex-col">
+                        <span class="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">Periode</span>
+                        <span class="font-bold text-slate-800">${formatPeriod(slip.periode)}</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-right">
+                        <div class="flex flex-col">
+                            <span class="text-xs text-slate-500 mb-1">Total Diterima</span>
+                            <span class="font-bold text-emerald-600">${formatRupiah(totalGaji)}</span>
+                        </div>
+                        <div class="bg-blue-100 text-blue-600 p-1.5 rounded-md w-7 h-7 flex items-center justify-center">
+                            <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200" id="icon-slip-${index}"></i>
+                        </div>
+                    </div>
+                </div>
+                <div id="slip-${index}" class="hidden">
+                    <div class="p-4 space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                <div class="text-xs text-slate-500 mb-1">Total Kehadiran</div>
+                                <div class="font-semibold text-slate-800">${slip.total_kehadiran || '0'} Hari</div>
+                            </div>
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                <div class="text-xs text-slate-500 mb-1">Absen / Izin</div>
+                                <div class="font-semibold text-slate-800">${slip.absen_izin || '0'} Hari</div>
+                            </div>
+                        </div>
+                        <hr class="border-slate-100">
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-600">Gaji Pokok</span>
+                                <span class="font-medium text-slate-800">${formatRupiah(gajiPokok)}</span>
+                            </div>
+                            ${lemburRow}
+                            ${bonusRow}
+                            ${potonganRow}
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-dashed border-slate-300 flex justify-between items-center">
+                            <span class="font-bold text-slate-800">Total Gaji Bersih</span>
+                            <span class="text-lg font-bold text-emerald-600">${formatRupiah(totalGaji)}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    // RENDER KE DOM HANYA 1 KALI
+    container.innerHTML = slipsHTML;
+    lucide.createIcons();
+}
+
+// ==========================================
+// FITUR ADMINISTRATOR & WHATSAPP
+// ==========================================
+const ALLOWED_ADMIN_ROLES = ['Bendahara', 'Owner', 'HRD'];
+let adminKaryawanData = {};
+let adminAbsensiData = [];
+
+// Fungsi untuk menginisialisasi dashboard dan mengecek apakah user adalah admin
+async function initDashboard(user, slips) {
+    // Jalankan render standar untuk user yang sedang login
+    renderDashboard(user, slips);
+    
+    const adminPanel = document.getElementById('admin-panel');
+    
+    // Cek apakah posisi user diizinkan mengakses mode admin
+    if (ALLOWED_ADMIN_ROLES.includes(user.position)) {
+        adminPanel.classList.remove('hidden');
+        await prepareAdminData();
+        populateAdminDropdown(user.code);
+        updateManualButtonState();
+        lucide.createIcons();
+    } else {
+        adminPanel.classList.add('hidden');
+    }
+}
+
+// ==========================================
+// 5. FITUR ADMIN & WHATSAPP (Diperbarui)
+// ==========================================
+async function prepareAdminData() {
+    try {
+        const [
+            { data: employees },
+            { data: attendance },
+            { data: holidays }
+        ] = await Promise.all([
+            supabaseClient.from('employees').select('*').order('name'),
+            supabaseClient.from('attendance').select('*'),
+            supabaseClient.from('holidays').select('*')
+        ]);
+
+        AppState.admin.attendance = attendance || [];
+        
+        if (AppState.holidays.size === 0 && holidays) {
+            holidays.forEach(h => {
+                const startStr = h.start_date.split(' ')[0].split('T')[0]; 
+                const endStr = (h.end_date || h.start_date).split(' ')[0].split('T')[0];
+                let dStart = new Date(startStr + 'T00:00:00Z');
+                let dEnd = new Date(endStr + 'T00:00:00Z');
+                for (let d = new Date(dStart); d <= dEnd; d.setUTCDate(d.getUTCDate() + 1)) {
+                    AppState.holidays.add(d.toISOString().split('T')[0]);
+                }
+            });
+        }
+
+        AppState.admin.employees = {};
+        (employees || []).forEach(emp => {
+            AppState.admin.employees[emp.code] = {
+                nama: emp.name,
+                start: parseStartDate(emp.start_date), // Menggunakan utilitas
+                jamKerja: parseFloat(emp.working_hours) || 8,
+                position: emp.position,
+                shift_type: emp.shift_type,
+                raw: emp
+            };
+        });
+    } catch (e) {
+        console.error("Gagal load data admin:", e);
+    }
+}
+
+function populateAdminDropdown(currentCode) {
+    const select = document.getElementById('adminEmployeeSelect');
+    let optionsHTML = '<option value="" disabled>-- Pilih Karyawan --</option>'; // Optimasi DOM
+    
+    Object.entries(AppState.admin.employees).forEach(([code, data]) => {
+        const isSelected = code === currentCode ? 'selected' : '';
+        const status = data.position.includes('Part Time') ? 'Part Time' : 'Reguler';
+        optionsHTML += `<option value="${code}" ${isSelected}>${data.nama} (${status})</option>`;
+    });
+    
+    select.innerHTML = optionsHTML;
+}
+
+async function onAdminSelectEmployee(selectedCode) {
+    const selectedUserRaw = AppState.admin.employees[selectedCode].raw;
+    const { data: slips } = await supabaseClient
+        .from('gaji')
+        .select('*')
+        .eq('noid', selectedCode)
+        .order('id', { ascending: false });
+        
+    renderDashboard(selectedUserRaw, slips || []);
+}
+
+// FUNGSI WHATSAPP
+// TODO (KEAMANAN): Pindahkan request fetch API Fonnte ini ke backend / serverless function di masa depan.
+async function sendWhatsApp(pesan) {
+    const token = 'cAswYc8237BQhnuGWdBE'; // PERINGATAN: Berbahaya jika dibiarkan di front-end produksi
+    const targetWA = '120363421730994663@g.us';
+    const pesanDenganMention = pesan + "\n\nCc: @6281355730352";
+    
+    try {
+        const response = await fetch('https://api.fonnte.com/send', {
+            method: 'POST',
+            headers: {
+                'Authorization': token,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                target: targetWA,
+                message: pesanDenganMention,
+            })
+        });
+        const data = await response.json();
+        console.log('WA Notif Terkirim:', data);
+    } catch (error) {
+        console.error('Gagal mengirim WA:', error);
+    }
+}
+
+function triggerManualSend() {
+    if (Object.keys(AppState.admin.employees).length === 0) {
+        alert("Data belum selesai dimuat, silakan tunggu sebentar.");
+        return;
+    }
+    checkAndNotifyPartTimeSchedule(true);
+}
+
+function checkAndNotifyPartTimeSchedule(isManualTrigger = false) {
+    const today = new Date();
+    const lookaheadDays = 7; 
+    let newSchedule = {};
+
+    // Menggunakan state baru
+    Object.entries(AppState.admin.employees).forEach(([noid, kary]) => {
+        if (!kary.position || !kary.position.toLowerCase().includes('part time')) return;
+
+        const shiftDays = parseInt(kary.shift_type) === 2 ? [4, 5, 6] : [1, 2, 3];
+        let dStart, dEnd;
+        const start = kary.start;
+        const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+        
+        for (let i = 0; i < 12; i++) {
+            dStart = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + i, start.getUTCDate()));
+            dEnd = new Date(Date.UTC(dStart.getUTCFullYear(), dStart.getUTCMonth() + 1, dStart.getUTCDate() - 1));
+            if (todayUTC >= dStart && todayUTC <= dEnd) break; 
+        }
+        if(!dStart || !dEnd) return;
+
+        const msPerDay = 1000 * 60 * 60 * 24;
+        const daysInPeriod = Math.round((dEnd - dStart) / msPerDay) + 1;
+
+        const dailyData = {};
+        AppState.admin.attendance.filter(r => r.employeeCode === noid).forEach(r => {
+            dailyData[r.date] = { 
+                jam: {
+                    masuk: (r.checkIn && r.checkIn !== '--') ? r.checkIn : null,
+                    keluar: (r.checkOut && r.checkOut !== '--') ? r.checkOut : null
+                } 
+            };
+        });
+
+        // (Logika Kalkulasi di bawah ini dibiarkan sama karena cukup unik untuk sistem part-time Anda)
+        let wajibDaysSet = new Set();
+        let weeks = [];
+        let currentWeek = { targetDays: [], attendedDays: [] };
+        
+        for (let i = 0; i < daysInPeriod; i++) {
+            const d = new Date(Date.UTC(dStart.getUTCFullYear(), dStart.getUTCMonth(), dStart.getUTCDate() + i));
+            const dateStr = d.toISOString().split('T')[0];
+            const isAhad = d.getUTCDay() === 0;
+            const dayOfWeek = d.getUTCDay();
+            const isLibur = AppState.holidays.has(dateStr);
+            const data = dailyData[dateStr];
+            const hasMasuk = data && (data.jam.masuk || data.jam.keluar);
+            
+            if (!isLibur && shiftDays.includes(dayOfWeek)) currentWeek.targetDays.push(dateStr);
+            if (hasMasuk) currentWeek.attendedDays.push(dateStr);
+            
+            if (isAhad || i === daysInPeriod - 1) {
+                weeks.push(currentWeek);
+                currentWeek = { targetDays: [], attendedDays: [] };
+            }
+        }
+        
+        let balanceSurplus = 0; 
+        weeks.forEach(w => {
+            const attendedOnTarget = w.targetDays.filter(td => w.attendedDays.includes(td)).length;
+            const extraAttendances = w.attendedDays.length - attendedOnTarget;
+            let availableSurplus = Math.max(0, balanceSurplus) + extraAttendances;
+            
+            w.targetDays.forEach(td => {
+                const attendedThisDay = w.attendedDays.includes(td);
+                if (availableSurplus > 0 && !attendedThisDay) {
+                    availableSurplus--; 
+                } else {
+                    wajibDaysSet.add(td);
+                }
+            });
+            balanceSurplus = balanceSurplus + w.attendedDays.length - w.targetDays.length;
+        });
+
+        let upcomingWajib = [];
+        for(let i = 1; i <= lookaheadDays; i++) {
+            let futureDate = new Date();
+            futureDate.setDate(today.getDate() + i);
+            let fStr = futureDate.toISOString().split('T')[0];
+            if (wajibDaysSet.has(fStr)) upcomingWajib.push(fStr);
+        }
+        
+        newSchedule[noid] = upcomingWajib;
+    });
+
+    let msg = "📢 *UPDATE JADWAL PART-TIME* 📢\nBerlaku untuk 7 hari ke depan (telah disesuaikan otomatis dengan surplus kehadiran):\n\n";
+    let count = 0;
+    
+    Object.entries(newSchedule).forEach(([noid, dates]) => {
+        const nama = AppState.admin.employees[noid].nama;
+        if (dates.length > 0) {
+            const formattedDates = dates.map(d => {
+                const dateObj = new Date(d);
+                return dateObj.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
+            }).join(', ');
+            msg += `👤 *${nama}*\n   Wajib Masuk: ${formattedDates}\n`;
+        } else {
+            msg += `👤 *${nama}*\n   Wajib Masuk: Bebas (Telah Tercover) 🎉\n`;
+        }
+        count++;
+    });
+
+    if (isManualTrigger) {
+        localStorage.setItem('lastManualSendDate', getTodayDateString());
+        localStorage.setItem('lastPartTimeSchedule', JSON.stringify(newSchedule));
+        
+        if (count > 0) {
+            msg += "\n_Pesan dikirim secara manual_";
+            sendWhatsApp(msg); 
+        } else {
+            alert("Tidak ada karyawan part-time untuk dihitung jadwalnya.");
+        }
+        alert("Pesan rekap jadwal berhasil dikirim ke grup WhatsApp!");
+        updateManualButtonState();
+    }
+}
+
+// ==========================================
+// LOGIKA NOTIFIKASI WHATSAPP
+// ==========================================
+function getTodayDateString() {
+    const tzOffset = (new Date()).getTimezoneOffset() * 60000;
+    return (new Date(Date.now() - tzOffset)).toISOString().split('T')[0];
+}
+
+function updateManualButtonState() {
+    const btn = document.getElementById('btnManualSend');
+    const todayStr = getTodayDateString();
+    const lastManualDate = localStorage.getItem('lastManualSendDate');
+    
+    if (lastManualDate === todayStr) {
+        btn.disabled = true;
+        btn.innerHTML = `<i data-lucide="check-circle" class="w-3 h-3"></i> Terkirim Hari Ini`;
+        btn.className = "text-[10px] sm:text-xs bg-slate-400 text-white font-bold py-1.5 px-3 rounded-lg shadow-sm cursor-not-allowed flex items-center gap-1";
+    } else {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="message-square" class="w-3 h-3"></i> Kirim WA`;
+        btn.className = "text-[10px] sm:text-xs bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-3 rounded-lg shadow-sm transition-colors flex items-center gap-1";
+    }
+    lucide.createIcons();
+}
+
+
 
         function toggleDetails(id) {
             const el = document.getElementById(id);
